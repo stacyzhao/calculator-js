@@ -5,10 +5,11 @@ var screen,
     buffer,
     runningTotal,
     prevNum = "",
-    prevOper;
+    prevOper,
+    clicked;
 
 screen = document.getElementById("displayequation");
-display = document.getElementById("displaytotal");
+result = document.getElementById("displaytotal");
 
 var calculateEquation = {
   '+': function(a, b) {
@@ -30,11 +31,31 @@ var len = elem.length;
 
 // displays number(s)
 for (var i = 0; i < len; i++ ) {
+
   elem[i].addEventListener("click", function() {
+    //check if = is clicked;
+    if (clicked == 'y') {
+      output = "";
+      screen.innerHTML = "";
+      result.innerHTML = "";
+      prevNum = "";
+      buffer = "";
+      prevOper ="";
+      operator = "";
+    };
+
     num = this.value;
     output = screen.innerHTML += num;
     prevNum += num;
     prevOper = operator;
+    // buffer = num;
+
+    if (isNaN(buffer)){
+      buffer = runningTotal;
+    };
+
+    clicked = 'n';
+
   }, false);
 };
 
@@ -43,21 +64,40 @@ var len1 = elem1.length;
 
 // displays operator(s)
 for (var i = 0; i < len1; i++) {
+
   elem1[i].addEventListener("click", function() {
     operator = this.value;
-    if (output) {
-      screen.innerHTML = output.concat(operator);
+    if (output || clicked == 'n') {
+      clicked = 'n';
+      check = output.concat(operator);
+
+      if (isNaN(check.slice(-2, -1))){
+        output = output.slice(0, -1);
+        output = output.concat(operator);
+        screen.innerHTML = output;
+      } else {
+        screen.innerHTML = check;
+      };
+
+      runningTotal = buffer;
+
       if (prevOper == undefined || prevOper == "") {
         buffer = parseFloat(prevNum);
       } else {
         if (prevNum != ""){
           runningTotal = calculateEquation[prevOper](buffer, parseFloat(prevNum));
-        }
-        display.innerHTML = runningTotal;
+        };
+        result.innerHTML = runningTotal;
         buffer = runningTotal;
-      }
+      };
+
+      if (isNaN(buffer) && isNaN(prevOper)){
+        runningTotal = buffer;
+      };
+
       prevNum = "";
-    }
+
+    };
   }, false);
 };
 
@@ -65,18 +105,21 @@ for (var i = 0; i < len1; i++) {
 document.querySelector(".clear").addEventListener("click", function() {
   if (output == undefined) {
     console.log('error');
-  }
-  output = output.slice(0, -prevNum.length);
-  prevNum = "";
-  buffer = "";
-  screen.innerHTML = output;
-  display.innerHTML = "";
-
+  } else {
+    output = output.slice(0, -prevNum.length);
+    screen.innerHTML = output;
+    prevNum = "";
+    buffer;
+    prevOper = "";
+    result.innerHTML = "";
+  };
+  runningTotal = buffer;
+  clicked = 'n';
 }, false);
 
 // remove all entries
 document.querySelector(".delete").addEventListener("click", function() {
-  num;
+  num ="";
   output = "";
   operator = "";
   buffer = "";
@@ -84,13 +127,28 @@ document.querySelector(".delete").addEventListener("click", function() {
   prevNum = "";
   prevOper = "";
   screen.innerHTML = "";
-  display.innerHTML = "";
+  result.innerHTML = "";
+
 }, false);
 
 // calculate total
 document.querySelector(".equal").addEventListener("click", function() {
-  if (output != undefined){
-    screen.innerHTML = output;
-    display.innerHTML = calculateEquation[operator](buffer, parseFloat(prevNum));
-  }
+  if (operator == undefined) {
+    console.log('error');
+  } else if (output != undefined) {
+    total = calculateEquation[operator](buffer, parseFloat(prevNum));
+    check = screen.innerHTML.substr(screen.innerHTML.length -1);
+    check = parseFloat(check);
+
+    if (isNaN(check)){
+      screen.innerHTML = screen.innerHTML.slice(0, -1);
+    } else {
+      result.innerHTML = total;
+      screen.innerHTML = output;
+    };
+
+  };
+
+  clicked = 'y';
+
 }, false);

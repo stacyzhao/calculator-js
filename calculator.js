@@ -36,12 +36,12 @@ for (var i = 0; i < len; i++ ) {
     //check if = is clicked;
     if (clicked == 'y') {
       output = "";
-      screen.innerHTML = "";
-      result.innerHTML = "";
       prevNum = "";
       buffer = "";
       prevOper ="";
       operator = "";
+      screen.innerHTML = "";
+      result.innerHTML = "";
     };
 
     num = this.value;
@@ -103,9 +103,7 @@ for (var i = 0; i < len1; i++) {
 
 // remove previous entry
 document.querySelector(".clear").addEventListener("click", function() {
-  if (output == undefined) {
-    console.log('error');
-  } else {
+  if (output != undefined) {
     output = output.slice(0, -prevNum.length);
     screen.innerHTML = output;
     prevNum = "";
@@ -126,9 +124,9 @@ document.querySelector(".delete").addEventListener("click", function() {
   runningTotal = "";
   prevNum = "";
   prevOper = "";
+  clicked = "n";
   screen.innerHTML = "";
   result.innerHTML = "";
-
 }, false);
 
 // calculate total

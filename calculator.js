@@ -6,7 +6,8 @@ var screen,
     runningTotal,
     prevNum = "",
     prevOper,
-    clicked;
+    clickedEqual,
+    decAdded = false;
 
 screen = document.getElementById("displayequation");
 result = document.getElementById("displaytotal");
@@ -26,6 +27,21 @@ var calculateEquation = {
   }
 };
 
+// check if num is empty, null or undefined
+function isEmpty(num){
+  return (!num || /^\s*$/.test(num));
+};
+
+// round number to 2 decimal points
+function roundToTwo(num) {
+    return +(Math.round(num + "e+2")  + "e-2");
+}
+
+// gets the last value of the output
+function lastChar(output){
+  return output.substring(output.length-1, output.length);
+}
+
 var elem = document.querySelectorAll(".num");
 var len = elem.length;
 
@@ -33,28 +49,32 @@ var len = elem.length;
 for (var i = 0; i < len; i++ ) {
 
   elem[i].addEventListener("click", function() {
-    //check if = is clicked;
-    if (clicked == 'y') {
-      output = "";
-      prevNum = "";
-      buffer = "";
-      prevOper ="";
-      operator = "";
-      screen.innerHTML = "";
-      result.innerHTML = "";
+    num = this.value;
+
+    // checks if there's a value before decimal if not add a zero before value
+    if (num == '.' && isEmpty(prevNum)){
+      output = screen.innerHTML += "0" + num ;
+
+    // checks for extra decimal
+    } else if (num == ".") {
+
+      if (!decAdded){
+        decAdded = true;
+        screen.innerHTML += num;
+      };
+
+    } else {
+      output = screen.innerHTML += num;
     };
 
-    num = this.value;
-    output = screen.innerHTML += num;
     prevNum += num;
     prevOper = operator;
-    // buffer = num;
 
-    if (isNaN(buffer)){
+    if (isEmpty(buffer)){
       buffer = runningTotal;
     };
 
-    clicked = 'n';
+    clickedEqual = false;
 
   }, false);
 };
@@ -66,11 +86,14 @@ var len1 = elem1.length;
 for (var i = 0; i < len1; i++) {
 
   elem1[i].addEventListener("click", function() {
+
     operator = this.value;
-    if (output || clicked == 'n') {
-      clicked = 'n';
+    if (output && operator) {
+      clickedEqual = false;
+
       check = output.concat(operator);
 
+      // check for double operators after clear entry
       if (isNaN(check.slice(-2, -1))){
         output = output.slice(0, -1);
         output = output.concat(operator);
@@ -81,29 +104,40 @@ for (var i = 0; i < len1; i++) {
 
       runningTotal = buffer;
 
-      if (prevOper == undefined || prevOper == "") {
+      // error handling if they clear then change number/operator
+      if (isEmpty(prevOper) && !isEmpty(prevNum)) {
         buffer = parseFloat(prevNum);
+      } else if (isEmpty(buffer)) {
+        buffer = runningTotal;
+
       } else {
-        if (prevNum != ""){
+
+        // if equal isnt clicked, calculate running total
+        if (!isEmpty(prevNum) && !isEmpty(runningTotal)){
           runningTotal = calculateEquation[prevOper](buffer, parseFloat(prevNum));
+        } else if (isEmpty(runningTotal)){
+          runningTotal = buffer;
         };
+
         result.innerHTML = runningTotal;
         buffer = runningTotal;
+
       };
 
-      if (isNaN(buffer) && isNaN(prevOper)){
+      if (isEmpty(buffer) && isEmpty(prevOper)){
         runningTotal = buffer;
       };
 
       prevNum = "";
-
+      decAdded = false;
     };
+
   }, false);
 };
 
 // remove previous entry
 document.querySelector(".clear").addEventListener("click", function() {
-  if (output != undefined) {
+  if (!isEmpty(output)) {
     output = output.slice(0, -prevNum.length);
     screen.innerHTML = output;
     prevNum = "";
@@ -112,7 +146,8 @@ document.querySelector(".clear").addEventListener("click", function() {
     result.innerHTML = "";
   };
   runningTotal = buffer;
-  clicked = 'n';
+  clickedEqual = false;
+  decAdded = false;
 }, false);
 
 // remove all entries
@@ -124,29 +159,36 @@ document.querySelector(".delete").addEventListener("click", function() {
   runningTotal = "";
   prevNum = "";
   prevOper = "";
-  clicked = "n";
+  clickedEqual = false;
+  decAdded = false;
   screen.innerHTML = "";
   result.innerHTML = "";
 }, false);
 
 // calculate total
 document.querySelector(".equal").addEventListener("click", function() {
-  if (operator == undefined) {
-    console.log('error');
-  } else if (output != undefined) {
-    total = calculateEquation[operator](buffer, parseFloat(prevNum));
-    check = screen.innerHTML.substr(screen.innerHTML.length -1);
-    check = parseFloat(check);
 
-    if (isNaN(check)){
+  if (!clickedEqual && !isEmpty(operator) && !isEmpty(buffer)){
+
+    total = calculateEquation[operator](buffer, parseFloat(prevNum));
+    checkFloat = parseFloat(lastChar(screen.innerHTML));
+
+    // checks if there is no operator or decimal afterwards
+    if (isEmpty(checkFloat)){
       screen.innerHTML = screen.innerHTML.slice(0, -1);
+
     } else {
-      result.innerHTML = total;
+      result.innerHTML = roundToTwo(total);
       screen.innerHTML = output;
     };
 
+    if (lastChar(prevNum) == "."){
+      result.innerHTML = roundToTwo(total);
+    }
+
   };
 
-  clicked = 'y';
+  clickedEqual = true;
+  decAdded = false;
 
 }, false);
